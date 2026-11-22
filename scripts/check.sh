@@ -47,7 +47,7 @@ for mode in push poll; do
   wait_for "$WORK/$mode.err" "subscribed by $mode"
   ctl '{"action":"emit","count":2,"data":{"account":"ops"}}' > /dev/null
   wait "$TP"
-  [ "$(wc -l < "$WORK/$mode.jsonl")" = 2 ] || { echo "$mode: expected 2 lines"; cat "$WORK/$mode.jsonl"; exit 1; }
+  [ "$(wc -l < "$WORK/$mode.jsonl" | tr -d " ")" = 2 ] || { echo "$mode: expected 2 lines"; cat "$WORK/$mode.jsonl"; exit 1; }
   grep -q '"event": "ledger.entry"' "$WORK/$mode.jsonl"
 done
 
