@@ -1,0 +1,57 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Check (types, tests, CLI end to end)
+        shell: bash
+        env:
+          PYTHON: python
+          PYTHONUTF8: "1"
+        run: uv run --python ${{ matrix.python }} --no-project --with pytest --with mypy bash scripts/check.sh
+
+  quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: README quickstart, literally
+        shell: bash
+        run: |
+          uv tool install .
+          cd "$(mktemp -d)"
+          eventwake --version
+          eventwake init
+          eventwake run --dry-run --count 1 | tee out.txt
+          grep -q "would run: claude -p" out.txt
+          eventwake status
+
+  interop:
+    # Runs against an independent implementation (t128n/github-events-mcp). Informational: a change
+    # upstream must not block main.
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Interop with github-events-mcp
+        shell: bash
+        env:
+          PYTHON: python
+          EVENTWAKE_INTEROP: "1"
+        run: uv run --no-project --with pytest --with mypy bash scripts/check.sh
