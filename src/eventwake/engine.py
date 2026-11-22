@@ -197,6 +197,12 @@ class Runner:
                              f"It offers: {names}")
         self.etype = match[0]
 
+    def _live(self) -> None:
+        """The server confirmed the subscription (first poll answer, ``active``, or subscribe)."""
+        if self._first:
+            self._first = False
+            log(f"{self.watch.title}: live ({self.mode})")
+
     def _max_age_ms(self, cursor: str | None) -> int | None:
         if cursor is None or self.watch.max_age is None or not self._first:
             return None
@@ -238,7 +244,7 @@ class Runner:
                 cursor = self.store.cursor(self.key)
                 continue
             retried_header = False
-            self._first = False
+            self._live()
             events = res.get("events") if isinstance(res.get("events"), list) else []
             raw_cursor = res.get("cursor")
             cursor = raw_cursor if isinstance(raw_cursor, str) else None  # absent means null
@@ -298,7 +304,7 @@ class Runner:
                 params = obj(msg.get("params"))
                 if method == "notifications/events/active":
                     confirmed = True
-                    self._first = False
+                    self._live()
                     hb = params.get("heartbeatMs")
                     if isinstance(hb, (int, float)) and not isinstance(hb, bool) and hb > 0:
                         heartbeat_s = hb / 1000
@@ -360,7 +366,7 @@ class Runner:
                 except McpError as e:
                     self._on_mcp_error(client, e)
                     continue
-                self._first = False
+                self._live()
                 sub_id = res.get("id")
                 route.sub_id = sub_id if isinstance(sub_id, str) else None
                 c = res.get("cursor")
