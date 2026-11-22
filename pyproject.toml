@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eventwake"
+version = "0.1.0"
+description = "Wake your coding agent when something happens: subscribe to MCP Events (SEP-3415) from any MCP server and run Claude Code, Codex or any CLI agent, or push into a live Claude Code session. Durable cursors, dedupe, untrusted-payload framing. Zero dependencies."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Prime-agentai" }]
+keywords = ["mcp", "model-context-protocol", "mcp-events", "sep-3415", "claude-code", "codex", "webhooks", "standard-webhooks", "event-driven", "ai-agents", "automation"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development",
+  "Topic :: System :: Monitoring",
+  "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "mypy>=1.8"]
+
+[project.scripts]
+eventwake = "eventwake.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Prime-agentai/eventwake"
+Issues = "https://github.com/Prime-agentai/eventwake/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+eventwake = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+filterwarnings = ["error::pytest.PytestUnhandledThreadExceptionWarning"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
