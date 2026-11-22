@@ -19,9 +19,10 @@ import time
 from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler
 from typing import Any
 
+from ._http import FastHTTPServer
 from .mcp import obj
 from .state import Delivered, Store
 
@@ -135,7 +136,7 @@ class Receiver:
                     return None
                 return self.rfile.read(n)
 
-        self.httpd = ThreadingHTTPServer((host, port), Handler)
+        self.httpd = FastHTTPServer((host, port), Handler)
         self.httpd.daemon_threads = True
         self.port = self.httpd.server_address[1]
         self._thread = threading.Thread(target=self.httpd.serve_forever, daemon=True,

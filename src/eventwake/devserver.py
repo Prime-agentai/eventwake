@@ -38,6 +38,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import IO, Any
 
 from . import __version__
+from ._http import FastHTTPServer
 from .mcp import EVENTS_EXT, PROTOCOL, SUB_ID_KEY, decode_header_value, obj, opt_str
 from .receiver import sign
 
@@ -755,7 +756,7 @@ def make_http(hub: Hub, host: str = "127.0.0.1", port: int = 0) -> ThreadingHTTP
             self.close_connection = True
             _guard_stream(server, msg, headers, send, threading.Event())
 
-    httpd = ThreadingHTTPServer((host, port), Handler)
+    httpd = FastHTTPServer((host, port), Handler)
     httpd.daemon_threads = True
     return httpd
 
