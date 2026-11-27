@@ -20,7 +20,7 @@ $ eventwake channel        # inside Claude Code 2.1.330, started with the dev-ch
 | Headless wake: `eventwake run` firing real `claude -p --model haiku` on dev-server events | 2 runs, exit 0, 3.7 s and 4.5 s. The second run batched 2 events |
 | Live session: `eventwake channel` registered in interactive Claude Code 2.1.330 | Registered, and the event reached the model (transcript above) |
 | Interop with an implementation we did not write: [t128n/github-events-mcp](https://github.com/t128n/github-events-mcp) `packages/events` @ `0f20546` | `ls`, push and poll all work. It also exposed a bug that our own fixture never triggered (closing a *chunked* SSE stream killed the reader thread). The bug is fixed, and the regression test was confirmed to fail on the old code |
-| `scripts/check.sh` | mypy `--strict`, 56 tests, then the real CLI end to end: push, poll, webhook (verification handshake plus signed delivery), the `run` sink, `status` and `init`. CI runs it on Linux and macOS for Python 3.11–3.13 |
+| `scripts/check.sh` | mypy `--strict`, 140 tests, then the real CLI end to end: push, poll, webhook (verification handshake plus signed delivery), the `run` sink, `status` and `init`. CI runs it on Linux and macOS for Python 3.11–3.13 |
 
 ## How it works
 

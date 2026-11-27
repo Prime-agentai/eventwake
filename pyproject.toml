@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "eventwake"
-version = "0.1.0"
+version = "0.1.1"
 description = "Wake your coding agent when something happens: subscribe to MCP Events (SEP-3415) from any MCP server and run Claude Code, Codex or any CLI agent, or push into a live Claude Code session. Durable cursors, dedupe, untrusted-payload framing. Zero dependencies."
 readme = "README.md"
 license = { text = "MIT" }
