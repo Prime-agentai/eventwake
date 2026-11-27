@@ -62,6 +62,13 @@ def _str_map(raw: Any) -> dict[str, str]:
     return {str(k): str(v) for k, v in raw.items()} if isinstance(raw, dict) else {}
 
 
+def _arg_list(raw: Any) -> list[str] | None:
+    """``args`` as a list of strings, or None if the entry is malformed (a str would split into chars)."""
+    if raw is None:
+        return []
+    return [str(a) for a in raw] if isinstance(raw, list) else None
+
+
 def endpoint_from_claude(label: str, raw: Any, source: str, missing: list[str]) -> Endpoint | str:
     """One Claude Code `mcpServers` entry -> Endpoint, or a reason it cannot be used."""
     if not isinstance(raw, dict):
@@ -77,7 +84,10 @@ def endpoint_from_claude(label: str, raw: Any, source: str, missing: list[str]) 
         cmd = raw.get("command")
         if not isinstance(cmd, str):
             return f"{label} ({source}): stdio server without command"
-        args = [expand(str(a), missing) for a in raw.get("args") or []]
+        plain = _arg_list(raw.get("args"))
+        if plain is None:
+            return f"{label} ({source}): args must be a list of strings"
+        args = [expand(a, missing) for a in plain]
         env = {k: expand(v, missing) for k, v in _str_map(raw.get("env")).items()}
         return Endpoint(label, "stdio", command=expand(cmd, missing), args=args, env=env, source=source)
     return f"{label} ({source}): transport {kind!r} is not supported (use http or stdio)"
@@ -96,11 +106,14 @@ def endpoint_from_codex(label: str, raw: Any, missing: list[str]) -> Endpoint | 
             headers["Authorization"] = "Bearer " + expand("${" + tok_var + "}", missing)
         return Endpoint(label, "http", url=raw["url"], headers=headers, source=source)
     if isinstance(raw.get("command"), str):
+        args = _arg_list(raw.get("args"))
+        if args is None:
+            return f"{label} ({source}): args must be a list of strings"
         return Endpoint(
             label,
             "stdio",
             command=raw["command"],
-            args=[str(a) for a in raw.get("args") or []],
+            args=args,
             env=_str_map(raw.get("env")),
             cwd=raw.get("cwd") if isinstance(raw.get("cwd"), str) else None,
             source=source,

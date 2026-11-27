@@ -95,6 +95,14 @@ class Config:
     poll_floor: float = 1.0
 
 
+def _span(raw: Any, what: str, *, allow_zero: bool = False) -> float:
+    """A duration that must be positive (``allow_zero``: or exactly zero, e.g. no batching)."""
+    seconds = duration(raw, what)
+    if seconds < 0 or (seconds == 0 and not allow_zero):
+        raise ConfigError(f"{what}: must be {'zero or ' if allow_zero else ''}positive, got {raw!r}")
+    return seconds
+
+
 def _str_list(raw: Any, what: str) -> list[str]:
     if isinstance(raw, str):
         raise ConfigError(f"{what}: use an argv list like [\"claude\", \"-p\"], not a shell string")
@@ -122,9 +130,9 @@ def parse_run(raw: JsonObj, where: str) -> RunSpec | None:
             raise ConfigError(f"{where}.cwd: expected a string")
         spec.cwd = raw["cwd"]
     if "timeout" in raw:
-        spec.timeout = duration(raw["timeout"], f"{where}.timeout")
+        spec.timeout = _span(raw["timeout"], f"{where}.timeout")
     if "batch_window" in raw:
-        spec.batch_window = duration(raw["batch_window"], f"{where}.batch_window")
+        spec.batch_window = _span(raw["batch_window"], f"{where}.batch_window", allow_zero=True)
     if "max_batch" in raw:
         spec.max_batch = _int(raw["max_batch"], f"{where}.max_batch")
     if "max_runs_per_hour" in raw:
@@ -161,7 +169,7 @@ def parse_watch(raw: Any, i: int) -> Watch:
         raise ConfigError(f"{where}.mode: one of auto, poll, push, webhook")
     max_age: float | None = 600.0
     if "max_age" in raw:
-        max_age = None if raw["max_age"] in ("none", "") else duration(raw["max_age"], f"{where}.max_age")
+        max_age = None if raw["max_age"] in ("none", "") else _span(raw["max_age"], f"{where}.max_age")
     name = raw.get("name", "")
     if not isinstance(name, str):
         raise ConfigError(f"{where}.name: expected a string")
@@ -183,8 +191,8 @@ def parse_webhook(raw: Any) -> WebhookSpec:
     if "listen" in raw:
         listen = raw["listen"]
         host, _, port = str(listen).rpartition(":")
-        if not port.isdigit():
-            raise ConfigError("webhook.listen: expected host:port, e.g. 127.0.0.1:8787")
+        if not port.isdigit() or not 1 <= int(port) <= 65535:
+            raise ConfigError("webhook.listen: expected host:port with a port in 1-65535, e.g. 127.0.0.1:8787")
         spec.listen_host, spec.listen_port = host or "127.0.0.1", int(port)
     if "public_url" in raw:
         url = raw["public_url"]
@@ -195,7 +203,7 @@ def parse_webhook(raw: Any) -> WebhookSpec:
         if raw["ttl"] == "never":
             spec.no_expiry, spec.ttl = True, None
         else:
-            spec.ttl = duration(raw["ttl"], "webhook.ttl")
+            spec.ttl = _span(raw["ttl"], "webhook.ttl")
     return spec
 
 
